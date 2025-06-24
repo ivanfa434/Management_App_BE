@@ -25,7 +25,7 @@ export class ExportController {
         `attachment; filename="${fileName}"`
       );
       res.setHeader("Content-Type", "application/json");
-      res.status(200).send(JSON.stringify(data, null, 2)); // formatted JSON
+      res.status(200).send(JSON.stringify(data, null, 2));
     } catch (error) {
       next(error);
     }
