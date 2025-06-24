@@ -4,7 +4,7 @@ import "reflect-metadata";
 import { container } from "tsyringe";
 import { PORT } from "./config";
 import { errorMiddleware } from "./middlewares/error.middleware";
-import { SampleRouter } from "./modules/sample/sample.router";
+import { AuthRouter } from "./modules/auth/auth.router";
 
 export class App {
   public app: Express;
@@ -21,10 +21,10 @@ export class App {
     this.app.use(json());
   }
 
-  private routes() {
-    const sampleRouter = container.resolve(SampleRouter);
+  private routes() {  
+    const authRouter = container.resolve(AuthRouter);
 
-    this.app.use("/samples", sampleRouter.getRouter());
+    this.app.use("/auth", authRouter.getRouter());
   }
 
   private handleError() {
