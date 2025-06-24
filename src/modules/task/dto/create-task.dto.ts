@@ -1,4 +1,3 @@
-// src/modules/task/dto/create-task.dto.ts
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateTaskDTO {
