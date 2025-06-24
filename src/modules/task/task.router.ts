@@ -11,15 +11,15 @@ import { UpdateTaskDTO } from "./dto/update-task.dto";
 @injectable()
 export class TaskRouter {
   private router: Router;
+  private taskController: TaskController;
+  private jwtMiddleware: JwtMiddleware;
 
-  constructor(
-    private taskController: TaskController,
-    private jwtMiddleware: JwtMiddleware
-  ) {
+  constructor(TaskController: TaskController, JwtMiddleware: JwtMiddleware) {
     this.router = Router();
+    this.taskController = TaskController;
+    this.jwtMiddleware = JwtMiddleware;
     this.initializeRoutes();
   }
-
   private initializeRoutes = () => {
     this.router.get(
       "/projects/:projectId/tasks",

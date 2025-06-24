@@ -8,7 +8,10 @@ import { UpdateTaskDTO } from "./dto/update-task.dto";
 
 @injectable()
 export class TaskController {
-  constructor(private taskService: TaskService) {}
+  private taskService: TaskService;
+  constructor(TaskService: TaskService) {
+    this.taskService = TaskService;
+  }
 
   getTasksByProject = async (
     req: Request,
