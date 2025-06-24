@@ -4,9 +4,11 @@ import "reflect-metadata";
 import { container } from "tsyringe";
 import { PORT } from "./config";
 import { errorMiddleware } from "./middlewares/error.middleware";
+
 import { AuthRouter } from "./modules/auth/auth.router";
 import { UserRouter } from "./modules/user/user.router";
 import { ProjectRouter } from "./modules/project/project.router";
+import { TaskRouter } from "./modules/task/task.router"; // ✅ tambahkan ini
 
 export class App {
   public app: Express;
@@ -27,10 +29,12 @@ export class App {
     const authRouter = container.resolve(AuthRouter);
     const userRouter = container.resolve(UserRouter);
     const projectRouter = container.resolve(ProjectRouter);
+    const taskRouter = container.resolve(TaskRouter);
 
     this.app.use("/auth", authRouter.getRouter());
     this.app.use("/users", userRouter.getRouter());
     this.app.use("/projects", projectRouter.getRouter());
+    this.app.use("/", taskRouter.getRouter()); 
   }
 
   private handleError() {
