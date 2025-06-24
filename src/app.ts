@@ -6,6 +6,7 @@ import { PORT } from "./config";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { AuthRouter } from "./modules/auth/auth.router";
 import { UserRouter } from "./modules/user/user.router";
+import { ProjectRouter } from "./modules/project/project.router";
 
 export class App {
   public app: Express;
@@ -25,9 +26,11 @@ export class App {
   private routes() {
     const authRouter = container.resolve(AuthRouter);
     const userRouter = container.resolve(UserRouter);
+    const projectRouter = container.resolve(ProjectRouter);
 
     this.app.use("/auth", authRouter.getRouter());
     this.app.use("/users", userRouter.getRouter());
+    this.app.use("/projects", projectRouter.getRouter());
   }
 
   private handleError() {

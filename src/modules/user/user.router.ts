@@ -18,14 +18,12 @@ export class UserRouter {
   }
 
   private initializeRoutes = () => {
-    // Get all users (kecuali diri sendiri)
     this.router.get(
       "/",
       this.jwtMiddleware.verifyToken(JWT_SECRET_KEY!),
       this.userController.getUsers
     );
 
-    // Get profile (me)
     this.router.get(
       "/me",
       this.jwtMiddleware.verifyToken(JWT_SECRET_KEY!),
