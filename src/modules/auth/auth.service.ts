@@ -1,11 +1,11 @@
 import { injectable } from "tsyringe";
-import { PrismaService } from "../prisma/prisma.service";
+import { JWT_SECRET_KEY } from "../../config";
 import { ApiError } from "../../utils/api-error";
-import { PasswordService } from "./password.service";
-import { TokenService } from "./token.service";
-import { BASE_URL_FE, JWT_SECRET_KEY } from "../../config";
+import { PrismaService } from "../prisma/prisma.service";
 import { LoginDTO } from "./dto/login.dto";
 import { RegisterDTO } from "./dto/register.dto";
+import { PasswordService } from "./password.service";
+import { TokenService } from "./token.service";
 
 @injectable()
 export class AuthService {
@@ -74,7 +74,6 @@ export class AuthService {
       JWT_SECRET_KEY!,
       { expiresIn: "2h" }
     );
-
 
     const { password: pwd, ...userWithoutPassword } = existingUser;
 

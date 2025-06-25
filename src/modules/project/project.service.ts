@@ -1,10 +1,9 @@
-import { PrismaService } from "../prisma/prisma.service";
-import { Prisma } from "../../generated/prisma";
 import { injectable } from "tsyringe";
 import { ApiError } from "../../utils/api-error";
+import { PrismaService } from "../prisma/prisma.service";
 import { CreateProjectDTO } from "./dto/create-project.dto";
-import { UpdateProjectDTO } from "./dto/update-project.dto";
 import { InviteMemberDTO } from "./dto/invite-mamber.dto";
+import { UpdateProjectDTO } from "./dto/update-project.dto";
 
 @injectable()
 export class ProjectService {
@@ -43,6 +42,20 @@ export class ProjectService {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        _count: {
+          select: {
+            memberships: {
+              where: {
+                deletedAt: null,
+              },
+            },
+            tasks: {
+              where: {
+                deletedAt: null,
+              },
+            },
           },
         },
       },
@@ -225,7 +238,7 @@ export class ProjectService {
     authUserId: string,
     body: InviteMemberDTO
   ) => {
-    const { userId } = body;
+    const { email } = body; // Ambil email instead of userId
 
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, deletedAt: null },
@@ -233,26 +246,32 @@ export class ProjectService {
 
     if (!project) throw new ApiError("Project not found", 404);
     if (project.ownerId !== authUserId) throw new ApiError("Forbidden", 403);
-    if (userId === authUserId)
-      throw new ApiError("Cannot invite yourself", 400);
 
+    // Cari user berdasarkan email
     const targetUser = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { email: email },
     });
 
     if (!targetUser) {
-      throw new ApiError("User to invite not found", 404);
+      throw new ApiError("User with this email not found", 404);
     }
 
+    // Check if trying to invite self (compare dengan targetUser.id)
+    if (targetUser.id === authUserId) {
+      throw new ApiError("Cannot invite yourself", 400);
+    }
+
+    // Check existing membership dengan targetUser.id
     const existing = await this.prisma.membership.findFirst({
-      where: { userId, projectId, deletedAt: null },
+      where: { userId: targetUser.id, projectId, deletedAt: null },
     });
 
     if (existing) throw new ApiError("User already a member", 400);
 
+    // Create membership dengan targetUser.id
     await this.prisma.membership.create({
       data: {
-        userId,
+        userId: targetUser.id,
         projectId,
       },
     });
