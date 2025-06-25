@@ -75,6 +75,16 @@ export class ProjectRouter {
       this.jwtMiddleware.verifyToken(JWT_SECRET_KEY!),
       this.projectController.removeProjectMember
     );
+    this.router.get(
+      "/:id/analytics",
+      this.jwtMiddleware.verifyToken(JWT_SECRET_KEY!),
+      this.projectController.getTaskAnalytics
+    );
+    this.router.get(
+      "/:id/export",
+      this.jwtMiddleware.verifyToken(JWT_SECRET_KEY!),
+      this.projectController.exportProject
+    );
   };
 
   getRouter() {

@@ -126,4 +126,43 @@ export class ProjectController {
       next(error);
     }
   };
+  getTaskAnalytics = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const authUserId = res.locals.user.id;
+      const projectId = req.params.id;
+      const result = await this.projectService.getTaskAnalytics(
+        projectId,
+        authUserId
+      );
+      res.status(200).send(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  exportProject = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projectId = req.params.id;
+      const authUserId = res.locals.user.id;
+      const data = await this.projectService.getProjectExport(
+        projectId,
+        authUserId
+      );
+
+      const fileName = `project-${data.id}.json`;
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`
+      );
+      res.setHeader("Content-Type", "application/json");
+      res.status(200).send(JSON.stringify(data, null, 2));
+    } catch (error) {
+      next(error);
+    }
+  };
 }

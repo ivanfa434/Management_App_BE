@@ -326,4 +326,96 @@ export class ProjectService {
 
     return { message: "Member removed successfully" };
   };
+  getTaskAnalytics = async (projectId: string, authUserId: string) => {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        deletedAt: null,
+        OR: [
+          { ownerId: authUserId },
+          { memberships: { some: { userId: authUserId, deletedAt: null } } },
+        ],
+      },
+    });
+
+    if (!project) throw new ApiError("Project not found or access denied", 403);
+
+    const [todo, inProgress, done] = await Promise.all([
+      this.prisma.task.count({
+        where: {
+          projectId,
+          deletedAt: null,
+          status: "TODO",
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          deletedAt: null,
+          status: "IN_PROGRESS",
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          deletedAt: null,
+          status: "DONE",
+        },
+      }),
+    ]);
+
+    return {
+      todo,
+      inProgress,
+      done,
+      total: todo + inProgress + done,
+    };
+  };
+
+  getProjectExport = async (projectId: string, authUserId: string) => {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        deletedAt: null,
+        OR: [
+          { ownerId: authUserId },
+          {
+            memberships: {
+              some: { userId: authUserId, deletedAt: null },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        owner: { select: { id: true, name: true, email: true } },
+        memberships: {
+          where: { deletedAt: null },
+          select: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        },
+        tasks: {
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            assignee: { select: { id: true, name: true, email: true } },
+          },
+        },
+      },
+    });
+
+    if (!project) throw new ApiError("Project not found", 404);
+
+    return project;
+  };
 }

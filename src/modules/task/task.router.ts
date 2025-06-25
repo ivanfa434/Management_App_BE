@@ -1,4 +1,3 @@
-// src/modules/task/task.router.ts
 import { Router } from "express";
 import { injectable } from "tsyringe";
 import { TaskController } from "./task.controller";
@@ -20,6 +19,7 @@ export class TaskRouter {
     this.jwtMiddleware = JwtMiddleware;
     this.initializeRoutes();
   }
+
   private initializeRoutes = () => {
     this.router.get(
       "/projects/:projectId/tasks",
