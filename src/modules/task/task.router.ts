@@ -40,7 +40,7 @@ export class TaskRouter {
       this.taskController.getTaskById
     );
 
-    this.router.put(
+    this.router.patch(
       "/tasks/:taskId",
       this.jwtMiddleware.verifyToken(JWT_SECRET_KEY!),
       validateBody(UpdateTaskDTO),
