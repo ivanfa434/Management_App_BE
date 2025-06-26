@@ -57,7 +57,7 @@ export class AuthService {
     });
 
     if (!existingUser) {
-      throw new ApiError("Invalid credentials", 400);
+      throw new ApiError("Your email or password is incorrect", 400);
     }
 
     const isPasswordValid = await this.passwordService.comparePassword(
@@ -66,7 +66,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new ApiError("Invalid credentials", 400);
+      throw new ApiError("Your email or password is incorrect", 400);
     }
 
     const accessToken = this.tokenService.generateToken(

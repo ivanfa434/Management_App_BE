@@ -27,6 +27,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.6.0",
+    "pusher": "^5.2.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"
   },

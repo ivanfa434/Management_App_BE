@@ -176,7 +176,6 @@ export class ProjectService {
       throw new ApiError("Forbidden", 403);
     }
 
-    // Optional: cek duplikat title
     if (body.title) {
       const titleUsed = await this.prisma.project.findFirst({
         where: {
@@ -238,7 +237,7 @@ export class ProjectService {
     authUserId: string,
     body: InviteMemberDTO
   ) => {
-    const { email } = body; // Ambil email instead of userId
+    const { email } = body;
 
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, deletedAt: null },
@@ -247,7 +246,6 @@ export class ProjectService {
     if (!project) throw new ApiError("Project not found", 404);
     if (project.ownerId !== authUserId) throw new ApiError("Forbidden", 403);
 
-    // Cari user berdasarkan email
     const targetUser = await this.prisma.user.findUnique({
       where: { email: email },
     });
@@ -256,19 +254,36 @@ export class ProjectService {
       throw new ApiError("User with this email not found", 404);
     }
 
-    // Check if trying to invite self (compare dengan targetUser.id)
     if (targetUser.id === authUserId) {
       throw new ApiError("Cannot invite yourself", 400);
     }
 
-    // Check existing membership dengan targetUser.id
-    const existing = await this.prisma.membership.findFirst({
-      where: { userId: targetUser.id, projectId, deletedAt: null },
+    const existingMembership = await this.prisma.membership.findFirst({
+      where: {
+        userId: targetUser.id,
+        projectId,
+      },
     });
 
-    if (existing) throw new ApiError("User already a member", 400);
+    if (existingMembership) {
+      if (existingMembership.deletedAt === null) {
+        throw new ApiError("User is already a member of this project", 400);
+      } else {
+        await this.prisma.membership.update({
+          where: { id: existingMembership.id },
+          data: {
+            deletedAt: null,
+            updatedAt: new Date(),
+          },
+        });
 
-    // Create membership dengan targetUser.id
+        return {
+          message: "User re-invited successfully",
+          action: "restored",
+        };
+      }
+    }
+
     await this.prisma.membership.create({
       data: {
         userId: targetUser.id,
@@ -276,7 +291,71 @@ export class ProjectService {
       },
     });
 
-    return { message: "User invited successfully" };
+    return {
+      message: "User invited successfully",
+      action: "created",
+    };
+  };
+
+  inviteMemberUpsert = async (
+    projectId: string,
+    authUserId: string,
+    body: InviteMemberDTO
+  ) => {
+    const { email } = body;
+
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, deletedAt: null },
+    });
+
+    if (!project) throw new ApiError("Project not found", 404);
+    if (project.ownerId !== authUserId) throw new ApiError("Forbidden", 403);
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    if (!targetUser) {
+      throw new ApiError("User with this email not found", 404);
+    }
+
+    if (targetUser.id === authUserId) {
+      throw new ApiError("Cannot invite yourself", 400);
+    }
+
+    const activeMembership = await this.prisma.membership.findFirst({
+      where: {
+        userId: targetUser.id,
+        projectId,
+        deletedAt: null,
+      },
+    });
+
+    if (activeMembership) {
+      throw new ApiError("User is already a member of this project", 400);
+    }
+
+    const membership = await this.prisma.membership.upsert({
+      where: {
+        userId_projectId: {
+          userId: targetUser.id,
+          projectId: projectId,
+        },
+      },
+      update: {
+        deletedAt: null,
+        updatedAt: new Date(),
+      },
+      create: {
+        userId: targetUser.id,
+        projectId: projectId,
+      },
+    });
+
+    return {
+      message: "User invited successfully",
+      membershipId: membership.id,
+    };
   };
 
   getProjectMembers = async (projectId: string, authUserId: string) => {
@@ -345,6 +424,7 @@ export class ProjectService {
 
     return { message: "Member removed successfully" };
   };
+
   getTaskAnalytics = async (projectId: string, authUserId: string) => {
     const project = await this.prisma.project.findFirst({
       where: {
